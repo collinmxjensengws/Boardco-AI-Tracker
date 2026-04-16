@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { MEMBERS, MODULES, type Member, type Module } from '@/lib/data';
 import MemberModal from '@/components/MemberModal';
@@ -17,6 +17,14 @@ function avatarColor(name: string): string {
   let h = 0;
   for (let i = 0; i < name.length; i++) h = name.charCodeAt(i) + ((h << 5) - h);
   return AVATAR_COLORS[Math.abs(h) % AVATAR_COLORS.length];
+}
+
+function getTaskLabel(taskId: string): string {
+  for (const mod of MODULES) {
+    const task = mod.tasks.find(t => t.id === taskId);
+    if (task) return task.label;
+  }
+  return 'task';
 }
 
 // ─── Sub-components ─────────────────────────────────────────────────────────
@@ -165,8 +173,11 @@ function MemberRow({
             width: 48, height: 4, background: '#E5E5EA', borderRadius: 2, overflow: 'hidden',
           }}>
             <div style={{
-              height: '100%', borderRadius: 2, background: mod.color,
-              width: `${pct}%`, transition: 'width 0.3s ease',
+              height: '100%', background: mod.color,
+              width: '100%',
+              transform: `scaleX(${pct / 100})`,
+              transformOrigin: 'left',
+              transition: 'transform 0.3s ease',
             }} />
           </div>
           <span style={{ fontSize: 12, color: '#6E6E73', fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}>
@@ -175,6 +186,47 @@ function MemberRow({
         </div>
       </td>
     </tr>
+  );
+}
+
+// ─── Undo toast ─────────────────────────────────────────────────────────────
+
+function Toast({ label, wasCompleted, onUndo, onDismiss }: {
+  label: string; wasCompleted: boolean; onUndo: () => void; onDismiss: () => void;
+}) {
+  const short = label.length > 32 ? label.slice(0, 32) + '…' : label;
+  return (
+    <>
+      <style>{`@keyframes toast-in { from { opacity:0; transform:translateX(-50%) translateY(10px); } to { opacity:1; transform:translateX(-50%) translateY(0); } }`}</style>
+      <div style={{
+        position: 'fixed', bottom: 96, left: '50%',
+        transform: 'translateX(-50%)', zIndex: 400,
+        background: '#1D1D1F', color: '#FFFFFF',
+        borderRadius: 14, padding: '11px 14px',
+        display: 'flex', alignItems: 'center', gap: 10,
+        boxShadow: '0 8px 32px rgba(0,0,0,0.28)',
+        fontSize: 13.5, whiteSpace: 'nowrap',
+        animation: 'toast-in 0.18s ease forwards',
+      }}>
+        <span style={{ fontSize: 15, color: wasCompleted ? '#AEAEB2' : '#34C759' }}>
+          {wasCompleted ? '↩' : '✓'}
+        </span>
+        <span>
+          {wasCompleted ? 'Unchecked' : 'Done!'}{' '}
+          <span style={{ color: 'rgba(255,255,255,0.45)', fontSize: 12 }}>{short}</span>
+        </span>
+        <button onClick={onUndo} style={{
+          background: 'rgba(255,255,255,0.15)', border: 'none', color: '#FFFFFF',
+          borderRadius: 7, padding: '5px 11px', cursor: 'pointer',
+          fontSize: 12.5, fontWeight: 600, marginLeft: 2,
+        }}>Undo</button>
+        <button onClick={onDismiss} style={{
+          background: 'none', border: 'none', color: 'rgba(255,255,255,0.35)',
+          cursor: 'pointer', fontSize: 20, padding: '0 2px',
+          lineHeight: 1, display: 'flex', alignItems: 'center',
+        }}>×</button>
+      </div>
+    </>
   );
 }
 
@@ -205,6 +257,8 @@ export default function Tracker() {
   const [loading, setLoading]               = useState(true);
   const [pendingKeys, setPendingKeys]       = useState<Set<string>>(new Set());
   const [selectedMember, setSelectedMember] = useState<Member | null>(null);
+  const [toast, setToast]                   = useState<{ label: string; email: string; taskId: string; wasCompleted: boolean } | null>(null);
+  const toastTimer                          = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Load initial data + subscribe to realtime changes
   useEffect(() => {
@@ -231,7 +285,12 @@ export default function Tracker() {
     return () => { supabase.removeChannel(channel); };
   }, []);
 
-  const toggle = useCallback(async (email: string, taskId: string) => {
+  const dismissToast = useCallback(() => {
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    setToast(null);
+  }, []);
+
+  const toggle = useCallback(async (email: string, taskId: string, silent = false) => {
     const key = `${email}:${taskId}`;
     if (pendingKeys.has(key)) return;
     const was = completions.has(key);
@@ -240,16 +299,23 @@ export default function Tracker() {
     setCompletions(prev => { const n = new Set(prev); was ? n.delete(key) : n.add(key); return n; });
     setPendingKeys(prev => { const n = new Set(prev); n.add(key); return n; });
 
+    // Show undo toast
+    if (!silent) {
+      if (toastTimer.current) clearTimeout(toastTimer.current);
+      setToast({ label: getTaskLabel(taskId), email, taskId, wasCompleted: was });
+      toastTimer.current = setTimeout(() => setToast(null), 3500);
+    }
+
     const { error } = was
       ? await supabase.from('task_completions').delete().match({ member_email: email, task_id: taskId })
       : await supabase.from('task_completions').upsert({ member_email: email, task_id: taskId });
 
     if (error) {
-      // Revert on error
       setCompletions(prev => { const n = new Set(prev); was ? n.add(key) : n.delete(key); return n; });
+      setToast(null);
     }
     setPendingKeys(prev => { const n = new Set(prev); n.delete(key); return n; });
-  }, [completions, pendingKeys]);
+  }, [completions, pendingKeys, dismissToast]);
 
   // ── Derived stats ────────────────────────────────────────────────────────
 
@@ -324,8 +390,10 @@ export default function Tracker() {
               <div style={{
                 height: '100%', borderRadius: 3,
                 background: 'linear-gradient(90deg, #0071E3, #34C759)',
-                width: `${overall.pct}%`,
-                transition: 'width 0.6s ease',
+                width: '100%',
+                transform: `scaleX(${overall.pct / 100})`,
+                transformOrigin: 'left',
+                transition: 'transform 0.6s ease',
               }} />
             </div>
             <div style={{ fontSize: 11, color: '#AEAEB2' }}>{overall.pct}% complete across all modules</div>
@@ -514,6 +582,16 @@ export default function Tracker() {
           pendingKeys={pendingKeys}
           onToggle={toggle}
           onClose={() => setSelectedMember(null)}
+        />
+      )}
+
+      {/* Undo toast */}
+      {toast && (
+        <Toast
+          label={toast.label}
+          wasCompleted={toast.wasCompleted}
+          onUndo={() => { toggle(toast.email, toast.taskId, true); dismissToast(); }}
+          onDismiss={dismissToast}
         />
       )}
 

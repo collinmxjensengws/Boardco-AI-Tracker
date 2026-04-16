@@ -103,18 +103,25 @@ export default function MemberModal({ member, completions, pendingKeys, onToggle
           {/* Overall progress */}
           <div style={{ marginTop: 18 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-              <span style={{ fontSize: 12, color: '#6E6E73' }}>Overall Progress</span>
-              <span style={{ fontSize: 12, fontWeight: 600, color: '#1D1D1F' }}>{doneTasks} / {totalTasks} tasks</span>
+              <span style={{ fontSize: 12, color: '#6E6E73' }}>
+                {doneTasks === totalTasks
+                  ? 'All done! Amazing work!'
+                  : doneTasks === 0
+                  ? 'Ready to start — you\'ve got this!'
+                  : `${totalTasks - doneTasks} task${totalTasks - doneTasks === 1 ? '' : 's'} left — keep going!`}
+              </span>
+              <span style={{ fontSize: 12, fontWeight: 600, color: '#1D1D1F' }}>{doneTasks} / {totalTasks}</span>
             </div>
             <div style={{ height: 6, background: '#E5E5EA', borderRadius: 3, overflow: 'hidden' }}>
               <div style={{
-                height: '100%', borderRadius: 3,
+                height: '100%',
                 background: `linear-gradient(90deg, ${color}, ${color}CC)`,
-                width: `${overallPct}%`,
-                transition: 'width 0.5s ease',
+                width: '100%',
+                transform: `scaleX(${overallPct / 100})`,
+                transformOrigin: 'left',
+                transition: 'transform 0.5s ease',
               }} />
             </div>
-            <div style={{ fontSize: 11, color: '#AEAEB2', marginTop: 4 }}>{overallPct}% complete</div>
           </div>
         </div>
 
@@ -140,7 +147,9 @@ export default function MemberModal({ member, completions, pendingKeys, onToggle
                     <span style={{ fontSize: 13, fontWeight: 650, color: '#1D1D1F' }}>{mod.title}</span>
                     <span style={{ fontSize: 11, color: '#AEAEB2' }}>· Due {mod.due}</span>
                   </div>
-                  <span style={{ fontSize: 12, fontWeight: 600, color: mod.color }}>{pct}%</span>
+                  <span style={{ fontSize: 12, fontWeight: 600, color: done === total ? mod.color : '#AEAEB2' }}>
+                    {done === total ? '✓ Done!' : `${done}/${total}`}
+                  </span>
                 </div>
 
                 {/* Task rows */}

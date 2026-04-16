@@ -7,7 +7,7 @@ interface Message {
   content: string;
 }
 
-const GREETING = "Hi! I'm your AI training assistant. I can walk you through any task step by step, answer questions about Claude, Freepik, or anything else in the program. What do you need help with?";
+const GREETING = "Hey! New to AI? No stress at all — just tell me which week you're working on and I'll walk you through it one step at a time. What are you working on?";
 
 export default function ChatBot() {
   const [open, setOpen]       = useState(false);
@@ -265,14 +265,14 @@ function TypingDots() {
         <span key={i} style={{
           width: 5, height: 5, borderRadius: '50%', background: '#AEAEB2',
           display: 'inline-block',
-          animation: 'bounce 1.2s ease infinite',
-          animationDelay: `${i * 0.2}s`,
+          animation: 'dot-float 1.2s ease-in-out infinite',
+          animationDelay: `${i * 0.18}s`,
         }} />
       ))}
       <style>{`
-        @keyframes bounce {
-          0%, 60%, 100% { transform: translateY(0); }
-          30% { transform: translateY(-4px); }
+        @keyframes dot-float {
+          0%, 100% { transform: translateY(0); opacity: 0.5; }
+          50% { transform: translateY(-4px); opacity: 1; }
         }
       `}</style>
     </span>
