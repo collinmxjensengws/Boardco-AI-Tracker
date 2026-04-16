@@ -3,6 +3,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { MEMBERS, MODULES, type Member, type Module } from '@/lib/data';
+import MemberModal from '@/components/MemberModal';
+import ChatBot from '@/components/ChatBot';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -84,13 +86,14 @@ function Checkbox({
 }
 
 function MemberRow({
-  member, module: mod, completions, pendingKeys, onToggle,
+  member, module: mod, completions, pendingKeys, onToggle, onSelect,
 }: {
   member: Member;
   module: Module;
   completions: Set<string>;
   pendingKeys: Set<string>;
   onToggle: (email: string, taskId: string) => void;
+  onSelect: (member: Member) => void;
 }) {
   const [hov, setHov] = useState(false);
   const done  = mod.tasks.filter(t => completions.has(`${member.email}:${t.id}`)).length;
@@ -116,7 +119,10 @@ function MemberRow({
         transition: 'background 0.12s ease',
         zIndex: 1,
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 170 }}>
+        <div
+          onClick={() => onSelect(member)}
+          style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 170, cursor: 'pointer' }}
+        >
           <div style={{
             width: 32, height: 32, borderRadius: '50%', flexShrink: 0,
             background: bg, display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -125,7 +131,14 @@ function MemberRow({
             {member.initials}
           </div>
           <div style={{ minWidth: 0 }}>
-            <div style={{ fontSize: 14, fontWeight: 500, color: '#1D1D1F', whiteSpace: 'nowrap' }}>
+            <div style={{
+              fontSize: 14, fontWeight: 500, color: '#0071E3', whiteSpace: 'nowrap',
+              textDecoration: 'underline', textDecorationColor: 'transparent',
+              transition: 'text-decoration-color 0.15s ease',
+            }}
+              onMouseEnter={e => (e.currentTarget.style.textDecorationColor = '#0071E3')}
+              onMouseLeave={e => (e.currentTarget.style.textDecorationColor = 'transparent')}
+            >
               {member.name}
             </div>
           </div>
@@ -191,6 +204,7 @@ export default function Tracker() {
   const [completions, setCompletions]       = useState<Set<string>>(new Set());
   const [loading, setLoading]               = useState(true);
   const [pendingKeys, setPendingKeys]       = useState<Set<string>>(new Set());
+  const [selectedMember, setSelectedMember] = useState<Member | null>(null);
 
   // Load initial data + subscribe to realtime changes
   useEffect(() => {
@@ -465,6 +479,7 @@ export default function Tracker() {
                       completions={completions}
                       pendingKeys={pendingKeys}
                       onToggle={toggle}
+                      onSelect={setSelectedMember}
                     />
                   ))}
                   <SectionHeader label="Mark's Marine" color="#AF52DE" colSpan={colSpan} />
@@ -476,6 +491,7 @@ export default function Tracker() {
                       completions={completions}
                       pendingKeys={pendingKeys}
                       onToggle={toggle}
+                      onSelect={setSelectedMember}
                     />
                   ))}
                 </tbody>
@@ -489,6 +505,20 @@ export default function Tracker() {
           Vjal program resumes May 4th · Questions? Reach Tom or Collin
         </div>
       </main>
+
+      {/* Member progress modal */}
+      {selectedMember && (
+        <MemberModal
+          member={selectedMember}
+          completions={completions}
+          pendingKeys={pendingKeys}
+          onToggle={toggle}
+          onClose={() => setSelectedMember(null)}
+        />
+      )}
+
+      {/* AI chatbot */}
+      <ChatBot />
     </div>
   );
 }
