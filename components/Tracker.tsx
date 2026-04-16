@@ -335,6 +335,11 @@ export default function Tracker() {
     return { done, total, pct: total ? Math.round(done / total * 100) : 0 };
   })();
 
+  const allTaskIds = MODULES.flatMap(m => m.tasks.map(t => t.id));
+  const caughtUp   = MEMBERS.filter(mb =>
+    allTaskIds.every(id => completions.has(`${mb.email}:${id}`))
+  ).length;
+
   const activeMod      = MODULES.find(m => m.id === activeModuleId)!;
   const activeProgress = modProgress(activeModuleId);
   const boardco        = MEMBERS.filter(m => m.org === 'BoardCo');
@@ -377,6 +382,18 @@ export default function Tracker() {
               <div style={{ fontSize: 11, color: '#6E6E73', lineHeight: 1 }}>Spring 2026</div>
             </div>
           </div>
+
+          {/* Caught up count */}
+          <div style={{ flexShrink: 0, textAlign: 'center' }}>
+            <div style={{ fontSize: 22, fontWeight: 800, color: caughtUp > 0 ? '#34C759' : '#C7C7CC', lineHeight: 1 }}>
+              {loading ? '—' : caughtUp}
+              <span style={{ fontSize: 13, fontWeight: 500, color: '#AEAEB2' }}> / {MEMBERS.length}</span>
+            </div>
+            <div style={{ fontSize: 11, color: '#6E6E73', marginTop: 2, whiteSpace: 'nowrap' }}>Caught Up</div>
+          </div>
+
+          {/* Divider */}
+          <div style={{ width: 1, height: 28, background: 'rgba(0,0,0,0.08)', flexShrink: 0 }} />
 
           {/* Overall progress bar */}
           <div className="header-progress">
