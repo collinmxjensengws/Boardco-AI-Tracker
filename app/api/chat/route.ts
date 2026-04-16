@@ -2,7 +2,21 @@ import Anthropic from '@anthropic-ai/sdk';
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
-const SYSTEM_PROMPT = `You are the AI assistant for BoardCo and Mark's Marine. You are their go-to for EVERYTHING related to AI — not just the training tasks, but literally anything. Writing emails, analyzing data, creating images, automating work, brainstorming, answering questions, building things — all of it. You love AI and you want everyone to love it too.
+function buildSystemPrompt() {
+  const freepikEmail    = process.env.FREEPIK_EMAIL    ?? '[ask Collin for the Freepik login]';
+  const freepikPassword = process.env.FREEPIK_PASSWORD ?? '[ask Collin for the Freepik password]';
+  const vjalUrl         = process.env.VJAL_URL         ?? 'https://learn.vjal.ai/bundles/Vjal-10week-coaching-program';
+  const vjalEmail       = process.env.VJAL_EMAIL       ?? '[ask Collin for the Vjal login]';
+  const vjalPassword    = process.env.VJAL_PASSWORD    ?? '[ask Collin for the Vjal password]';
+  return SYSTEM_PROMPT_TEMPLATE
+    .replace('{{FREEPIK_EMAIL}}',    freepikEmail)
+    .replace('{{FREEPIK_PASSWORD}}', freepikPassword)
+    .replace('{{VJAL_URL}}',         vjalUrl)
+    .replace('{{VJAL_EMAIL}}',       vjalEmail)
+    .replace('{{VJAL_PASSWORD}}',    vjalPassword);
+}
+
+const SYSTEM_PROMPT_TEMPLATE = `You are the AI assistant for BoardCo and Mark's Marine. You are their go-to for EVERYTHING related to AI — not just the training tasks, but literally anything. Writing emails, analyzing data, creating images, automating work, brainstorming, answering questions, building things — all of it. You love AI and you want everyone to love it too.
 
 Be warm, simple, and genuinely excited. Talk like you are explaining something to a 12 year old — simple words, short sentences, no jargon. Never give more than 3 steps at a time. Ask "Ready for the next step?" before continuing. No markdown, no asterisks, no bullet points. Just plain friendly sentences.
 
@@ -72,7 +86,7 @@ Goal: Use AI to create real, tangible output.
 
 Task: Create 3 images using Freepik
 Step 1: Go to freepik.com
-Step 2: Log in — Email: mitch@boardco.com, Password: MMwater1989!!!
+Step 2: Log in — Email: {{FREEPIK_EMAIL}}, Password: {{FREEPIK_PASSWORD}}
 Step 3: Find the AI Image Generator (look at the top of the page or search for it)
 Step 4: Type a description of what you want — something useful for work or personal use. Examples: "professional paddleboard product photo on lake", "BoardCo summer marketing banner", "friendly customer service rep at a boat dealership"
 Step 5: Download 3 images you like and send them to Mitch or Collin
@@ -95,8 +109,8 @@ Week 2 recording: https://youtu.be/MCVGw8xzUko
 Week 3 recording: https://youtu.be/JWJ-zuEzvds
 Week 4 recording: https://youtu.be/2EZs7el63Ds
 
-Vjal training portal: https://learn.vjal.ai/bundles/Vjal-10week-coaching-program
-Vjal login — Email: mitch.w.mann@gmail.com, Password: 0XSLsxVI3%^0bur1xZ5jWcfX
+Vjal training portal: {{VJAL_URL}}
+Vjal login — Email: {{VJAL_EMAIL}}, Password: {{VJAL_PASSWORD}}
 
 When someone asks about the video tasks, give them the link and say something like: "Here is the link — just watch it and check it off when you are done! I cannot watch it for you but I am here if you have questions after."
 
@@ -133,7 +147,7 @@ export async function POST(req: Request) {
   const stream = client.messages.stream({
     model: 'claude-haiku-4-5-20251001',
     max_tokens: 1024,
-    system: SYSTEM_PROMPT,
+    system: buildSystemPrompt(),
     messages,
   });
 
