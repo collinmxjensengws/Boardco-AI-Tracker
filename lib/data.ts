@@ -24,7 +24,6 @@ export interface Module {
 export const MEMBERS: Member[] = [
   // BoardCo
   { name: 'Adam Carter',    email: 'adamc@boardco.com',           org: 'BoardCo',         initials: 'AC' },
-  { name: 'Austen Willes',  email: 'austen@boardco.com',          org: 'BoardCo',         initials: 'AW' },
   { name: 'Drew Gourdin',   email: 'drew@boardco.com',            org: 'BoardCo',         initials: 'DG' },
   { name: 'Jack Dredge',    email: 'jackdredge@boardco.com',      org: 'BoardCo',         initials: 'JD' },
   { name: 'Kristin Mann',   email: 'kris@boardco.com',            org: 'BoardCo',         initials: 'KM' },
