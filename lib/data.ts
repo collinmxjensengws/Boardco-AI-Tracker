@@ -35,6 +35,7 @@ export const MEMBERS: Member[] = [
   { name: 'Grady',     email: 'grady@boardco.com',       org: 'BoardCo',       initials: 'GW' },
   { name: 'Hunter',    email: 'hunter@boardco.com',      org: 'BoardCo',       initials: 'HU' },
   { name: 'Jack',      email: 'jackdredge@boardco.com',  org: 'BoardCo',       initials: 'JD' },
+  { name: 'Jeff',      email: 'jeff@boardco.com',        org: 'BoardCo',       initials: 'JE' },
   { name: 'Jaiden',    email: 'jaiden@boardco.com',      org: 'BoardCo',       initials: 'JA' },
   { name: 'Jared',     email: 'jared@boardco.com',       org: 'BoardCo',       initials: 'JP' },
   { name: 'Justin',    email: 'justin@boardco.com',      org: 'BoardCo',       initials: 'JF' },
