@@ -52,7 +52,10 @@ export const MEMBERS: Member[] = [
   { name: 'Scott',     email: 'scott@boardco.com',       org: 'BoardCo',       initials: 'SC' },
   { name: 'Tanner',    email: 'tanner@boardco.com',      org: 'BoardCo',       initials: 'TB' },
   { name: 'Tom',       email: 'tom@boardco.com',         org: 'BoardCo',       initials: 'TF' },
+  { name: 'Trenton',   email: 'trenton@boardco.com',     org: 'BoardCo',       initials: 'TR' },
   { name: 'Troy',      email: 'troy@boardco.com',        org: 'BoardCo',       initials: 'TM' },
+  // Utah - Springville
+  { name: 'Alexa',     email: 'alexa@boardco.com',       org: 'BoardCo',       initials: 'AX' },
   // Mark's Marine
   { name: 'Aaron',     email: 'aaron@marksmarineinc.com',  org: "Mark's Marine", initials: 'AT' },
   { name: 'Heather',   email: 'heather@marksmarineinc.com', org: "Mark's Marine", initials: 'HE' },
